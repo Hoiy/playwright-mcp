@@ -20,6 +20,32 @@ import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
 import { generateLocator } from './utils.js';
 
+const get_html = defineTool({
+  capability: 'core',
+  schema: {
+    name: 'browser_get_html',
+    title: 'Page HTML',
+    description: 'Capture the html of the current page',
+    inputSchema: z.object({}),
+    type: 'readOnly',
+  },
+
+  handle: async context => {
+    await context.ensureTab();
+    const tab = context.currentTabOrDie();
+
+    return {
+      code: [`// Get HTML of the current page`, `await page.content();`],
+      action: () =>
+        tab.page.content().then(html => {
+          return { content: [{ type: 'text', text: html }] };
+        }),
+      captureSnapshot: false,
+      waitForNetwork: false,
+    };
+  },
+});
+
 const snapshot = defineTool({
   capability: 'core',
   schema: {
@@ -216,11 +242,4 @@ const selectOption = defineTool({
   },
 });
 
-export default [
-  snapshot,
-  click,
-  drag,
-  hover,
-  type,
-  selectOption,
-];
+export default [get_html, snapshot, click, drag, hover, type, selectOption];
